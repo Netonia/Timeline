@@ -1,0 +1,67 @@
+@using Timeline.Models
+@using Timeline.Services
+
+<div class="timeline-display">
+    @if (People != null && People.Any())
+    {
+        <div class="timeline-container">
+            @foreach (var person in People)
+            {
+                <div class="timeline-entry @(SelectedPerson?.Id == person.Id ? "selected" : "")" 
+                     @onclick="() => OnPersonSelected(person)"
+                     id="person-@person.Id">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <h4>@person.Name</h4>
+                            <span class="timeline-lifespan">@person.LifeSpan</span>
+                        </div>
+                        <p class="timeline-description">@person.Description</p>
+                        <div class="timeline-actions">
+                            <button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditClicked(person)" @onclick:stopPropagation="true">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" @onclick="() => OnDeleteClicked(person)" @onclick:stopPropagation="true">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            No people in the timeline yet. Add someone to get started!
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<Person>? People { get; set; }
+
+    [Parameter]
+    public EventCallback<Person> OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<Person> OnDelete { get; set; }
+
+    private Person? SelectedPerson { get; set; }
+
+    private void OnPersonSelected(Person person)
+    {
+        SelectedPerson = person;
+    }
+
+    private async Task OnEditClicked(Person person)
+    {
+        await OnEdit.InvokeAsync(person);
+    }
+
+    private async Task OnDeleteClicked(Person person)
+    {
+        await OnDelete.InvokeAsync(person);
+    }
+}
