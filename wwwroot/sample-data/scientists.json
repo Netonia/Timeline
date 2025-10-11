@@ -1,0 +1,110 @@
+[
+  {
+    "Name": "Galileo Galilei",
+    "BirthDate": "1564-02-15",
+    "DeathDate": "1642-01-08",
+    "Description": "Astronomer; telescope observations; heliocentric theory support"
+  },
+  {
+    "Name": "Isaac Newton",
+    "BirthDate": "1643-01-04",
+    "DeathDate": "1727-03-31",
+    "Description": "Laws of motion and universal gravitation"
+  },
+  {
+    "Name": "Michael Faraday",
+    "BirthDate": "1791-09-22",
+    "DeathDate": "1867-08-25",
+    "Description": "Electromagnetic induction; electrolysis laws"
+  },
+  {
+    "Name": "Charles Darwin",
+    "BirthDate": "1809-02-12",
+    "DeathDate": "1882-04-19",
+    "Description": "Theory of evolution by natural selection"
+  },
+  {
+    "Name": "Gregor Mendel",
+    "BirthDate": "1822-07-20",
+    "DeathDate": "1884-01-06",
+    "Description": "Father of genetics; laws of inheritance"
+  },
+  {
+    "Name": "Louis Pasteur",
+    "BirthDate": "1822-12-27",
+    "DeathDate": "1895-09-28",
+    "Description": "Germ theory of disease; pasteurization process"
+  },
+  {
+    "Name": "James Clerk Maxwell",
+    "BirthDate": "1831-06-13",
+    "DeathDate": "1879-11-05",
+    "Description": "Electromagnetic theory; Maxwell's equations"
+  },
+  {
+    "Name": "Dmitri Mendeleev",
+    "BirthDate": "1834-02-08",
+    "DeathDate": "1907-02-02",
+    "Description": "Periodic table of chemical elements"
+  },
+  {
+    "Name": "Nikola Tesla",
+    "BirthDate": "1856-07-10",
+    "DeathDate": "1943-01-07",
+    "Description": "Electrical engineering innovations, AC power systems"
+  },
+  {
+    "Name": "Max Planck",
+    "BirthDate": "1858-04-23",
+    "DeathDate": "1947-10-04",
+    "Description": "Quantum theory originator; Planck's constant"
+  },
+  {
+    "Name": "Marie Curie",
+    "BirthDate": "1867-11-07",
+    "DeathDate": "1934-07-04",
+    "Description": "Discovered radium and polonium; pioneer in radioactivity research"
+  },
+  {
+    "Name": "Albert Einstein",
+    "BirthDate": "1879-03-14",
+    "DeathDate": "1955-04-18",
+    "Description": "Theory of relativity"
+  },
+  {
+    "Name": "Niels Bohr",
+    "BirthDate": "1885-10-07",
+    "DeathDate": "1962-11-18",
+    "Description": "Atomic structure and quantum theory"
+  },
+  {
+    "Name": "Erwin Schrödinger",
+    "BirthDate": "1887-08-12",
+    "DeathDate": "1961-01-04",
+    "Description": "Wave mechanics"
+  },
+  {
+    "Name": "Wolfgang Pauli",
+    "BirthDate": "1900-04-25",
+    "DeathDate": "1958-12-15",
+    "Description": "Pauli exclusion principle; theoretical physics pioneer"
+  },
+  {
+    "Name": "Werner Heisenberg",
+    "BirthDate": "1901-12-05",
+    "DeathDate": "1976-02-01",
+    "Description": "Uncertainty principle; quantum mechanics"
+  },
+  {
+    "Name": "Richard Feynman",
+    "BirthDate": "1918-05-11",
+    "DeathDate": "1988-02-15",
+    "Description": "Quantum electrodynamics"
+  },
+  {
+    "Name": "Stephen Hawking",
+    "BirthDate": "1942-01-08",
+    "DeathDate": "2018-03-14",
+    "Description": "Black hole physics; theoretical cosmology"
+  }
+]
