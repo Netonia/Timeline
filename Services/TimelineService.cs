@@ -11,6 +11,8 @@ public class TimelineService
     private readonly HttpClient _httpClient;
     private List<Person> _people = new();
     private const string StorageKey = "timeline_people";
+    private const string VersionKey = "timeline_version";
+    private const string CurrentVersion = "2.0"; // Increment this to force data reload
 
     public event Action? OnChange;
 
@@ -22,6 +24,16 @@ public class TimelineService
 
     public async Task InitializeAsync()
     {
+        // Check if we need to force reload due to version change
+        var storedVersion = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", VersionKey);
+        
+        if (storedVersion != CurrentVersion)
+        {
+            // Clear old data and force reload
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StorageKey);
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", VersionKey, CurrentVersion);
+        }
+
         await LoadFromLocalStorageAsync();
 
         if (_people.Count == 0)
@@ -34,6 +46,7 @@ public class TimelineService
     public async Task ClearDataAndReloadAsync()
     {
         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StorageKey);
+        await _jsRuntime.InvokeVoidAsync("localStorage.setItem", VersionKey, CurrentVersion);
         _people.Clear();
         await LoadSampleDataFromJsonAsync();
         await SaveToLocalStorageAsync();
@@ -96,6 +109,13 @@ public class TimelineService
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
                 _people = JsonSerializer.Deserialize<List<Person>>(json, options) ?? new List<Person>();
+                
+                // Post-process to fix any encoding issues in loaded data
+                foreach (var person in _people)
+                {
+                    person.Name = FixEncodingIssues(person.Name);
+                    person.Description = FixEncodingIssues(person.Description);
+                }
             }
         }
         catch
@@ -125,9 +145,8 @@ public class TimelineService
             
             if (response.IsSuccessStatusCode)
             {
-                // Ensure UTF-8 encoding for proper character handling
-                var jsonBytes = await response.Content.ReadAsByteArrayAsync();
-                var jsonString = Encoding.UTF8.GetString(jsonBytes);
+                // Get the response as string with proper encoding handling
+                var jsonString = await response.Content.ReadAsStringAsync();
                 
                 var options = new JsonSerializerOptions
                 {
@@ -141,10 +160,10 @@ public class TimelineService
                 {
                     _people = scientistData.Select(s => new Person
                     {
-                        Name = s.Name,
+                        Name = FixEncodingIssues(s.Name),
                         BirthDate = DateTime.Parse(s.BirthDate),
                         DeathDate = string.IsNullOrEmpty(s.DeathDate) ? null : DateTime.Parse(s.DeathDate),
-                        Description = s.Description
+                        Description = FixEncodingIssues(s.Description)
                     }).ToList();
                 }
             }
@@ -154,11 +173,36 @@ public class TimelineService
                 LoadSampleDataFallback();
             }
         }
-        catch
+        catch (Exception ex)
         {
+            // Log the exception for debugging
+            Console.WriteLine($"Error loading JSON: {ex.Message}");
             // Fallback to hardcoded data if there's any error
             LoadSampleDataFallback();
         }
+    }
+
+    private string FixEncodingIssues(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        // Fix common encoding issues
+        var fixes = new Dictionary<string, string>
+        {
+            { "Schr�dinger", "Schrödinger" },
+            { "Schrdinger", "Schrödinger" },
+            { "Schr?dinger", "Schrödinger" },
+            { "Schr\u00f6dinger", "Schrödinger" } // This should already be correct but just in case
+        };
+
+        var result = input;
+        foreach (var fix in fixes)
+        {
+            result = result.Replace(fix.Key, fix.Value);
+        }
+
+        return result;
     }
 
     private void LoadSampleDataFallback()
