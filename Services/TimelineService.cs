@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.JSInterop;
 using Timeline.Models;
+using System.Text;
 
 namespace Timeline.Services;
 
@@ -97,26 +98,71 @@ public class TimelineService
 
     private async Task LoadSampleDataFromJsonAsync()
     {
-        var response = await _httpClient.GetAsync("sample-data/scientists.json");
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var scientistData = JsonSerializer.Deserialize<List<ScientistData>>(jsonString, new JsonSerializerOptions
+            var response = await _httpClient.GetAsync("sample-data/scientists.json");
+            if (response.IsSuccessStatusCode)
             {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (scientistData != null)
-            {
-                _people = scientistData.Select(s => new Person
+                // Ensure UTF-8 encoding for proper character handling
+                var jsonBytes = await response.Content.ReadAsByteArrayAsync();
+                var jsonString = Encoding.UTF8.GetString(jsonBytes);
+                
+                var scientistData = JsonSerializer.Deserialize<List<ScientistData>>(jsonString, new JsonSerializerOptions
                 {
-                    Name = s.Name,
-                    BirthDate = DateTime.Parse(s.BirthDate),
-                    DeathDate = string.IsNullOrEmpty(s.DeathDate) ? null : DateTime.Parse(s.DeathDate),
-                    Description = s.Description
-                }).ToList();
+                    PropertyNameCaseInsensitive = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                });
+
+                if (scientistData != null)
+                {
+                    _people = scientistData.Select(s => new Person
+                    {
+                        Name = s.Name,
+                        BirthDate = DateTime.Parse(s.BirthDate),
+                        DeathDate = string.IsNullOrEmpty(s.DeathDate) ? null : DateTime.Parse(s.DeathDate),
+                        Description = s.Description
+                    }).ToList();
+                }
+            }
+            else
+            {
+                // Fallback to hardcoded data if JSON file can't be loaded
+                LoadSampleDataFallback();
             }
         }
+        catch
+        {
+            // Fallback to hardcoded data if there's any error
+            LoadSampleDataFallback();
+        }
+    }
+
+    private void LoadSampleDataFallback()
+    {
+        _people = new List<Person>
+        {
+            new Person
+            {
+                Name = "Isaac Newton",
+                BirthDate = new DateTime(1643, 1, 4),
+                DeathDate = new DateTime(1727, 3, 31),
+                Description = "Laws of motion and universal gravitation"
+            },
+            new Person
+            {
+                Name = "Albert Einstein",
+                BirthDate = new DateTime(1879, 3, 14),
+                DeathDate = new DateTime(1955, 4, 18),
+                Description = "Theory of relativity"
+            },
+            new Person
+            {
+                Name = "Erwin Schrödinger",
+                BirthDate = new DateTime(1887, 8, 12),
+                DeathDate = new DateTime(1961, 1, 4),
+                Description = "Wave mechanics"
+            }
+        };
     }
 
     private void NotifyStateChanged() => OnChange?.Invoke();
