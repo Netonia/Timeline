@@ -13,8 +13,13 @@
     </header>
 
     <div class="search-bar mb-4">
-        <input type="text" class="form-control" placeholder="Search by name or description..." 
-               @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control" placeholder="Search by name or description..." 
+                   @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
+            <button class="btn btn-outline-secondary" @onclick="ReloadData" title="Reload data from JSON">
+                🔄 Reload
+            </button>
+        </div>
     </div>
 
     <div class="content-area">
@@ -80,6 +85,12 @@
     private void HandleFormSubmitted()
     {
         editingPerson = null;
+        LoadPeople();
+    }
+
+    private async Task ReloadData()
+    {
+        await TimelineService.ClearDataAndReloadAsync();
         LoadPeople();
     }
 

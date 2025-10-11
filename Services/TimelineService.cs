@@ -31,6 +31,15 @@ public class TimelineService
         }
     }
 
+    public async Task ClearDataAndReloadAsync()
+    {
+        await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StorageKey);
+        _people.Clear();
+        await LoadSampleDataFromJsonAsync();
+        await SaveToLocalStorageAsync();
+        NotifyStateChanged();
+    }
+
     public IEnumerable<Person> GetPeople() => _people.OrderBy(p => p.BirthDate);
 
     public IEnumerable<Person> SearchPeople(string searchTerm)
@@ -81,7 +90,12 @@ public class TimelineService
             var json = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", StorageKey);
             if (!string.IsNullOrEmpty(json))
             {
-                _people = JsonSerializer.Deserialize<List<Person>>(json) ?? new List<Person>();
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+                _people = JsonSerializer.Deserialize<List<Person>>(json, options) ?? new List<Person>();
             }
         }
         catch
@@ -92,7 +106,12 @@ public class TimelineService
 
     private async Task SaveToLocalStorageAsync()
     {
-        var json = JsonSerializer.Serialize(_people);
+        var options = new JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            WriteIndented = false
+        };
+        var json = JsonSerializer.Serialize(_people, options);
         await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, json);
     }
 
@@ -100,18 +119,23 @@ public class TimelineService
     {
         try
         {
-            var response = await _httpClient.GetAsync("sample-data/scientists.json");
+            // Add cache-busting parameter to force fresh load
+            var cacheBuster = DateTime.Now.Ticks;
+            var response = await _httpClient.GetAsync($"sample-data/scientists.json?v={cacheBuster}");
+            
             if (response.IsSuccessStatusCode)
             {
                 // Ensure UTF-8 encoding for proper character handling
                 var jsonBytes = await response.Content.ReadAsByteArrayAsync();
                 var jsonString = Encoding.UTF8.GetString(jsonBytes);
                 
-                var scientistData = JsonSerializer.Deserialize<List<ScientistData>>(jsonString, new JsonSerializerOptions
+                var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                });
+                };
+
+                var scientistData = JsonSerializer.Deserialize<List<ScientistData>>(jsonString, options);
 
                 if (scientistData != null)
                 {
@@ -160,7 +184,7 @@ public class TimelineService
                 Name = "Erwin Schrödinger",
                 BirthDate = new DateTime(1887, 8, 12),
                 DeathDate = new DateTime(1961, 1, 4),
-                Description = "Wave mechanics"
+                Description = "Wave mechanics and quantum theory"
             }
         };
     }
