@@ -1,0 +1,90 @@
+﻿@page "/"
+@using Timeline.Models
+@using Timeline.Services
+@using Timeline.Components
+@inject TimelineService TimelineService
+
+<PageTitle>Timeline of People</PageTitle>
+
+<div class="timeline-app">
+    <header class="app-header">
+        <h1>Timeline of People</h1>
+        <p class="lead">A chronological visualization of notable individuals</p>
+    </header>
+
+    <div class="search-bar mb-4">
+        <input type="text" class="form-control" placeholder="Search by name or description..." 
+               @bind="searchTerm" @bind:event="oninput" @onkeyup="HandleSearch" />
+    </div>
+
+    <div class="content-area">
+        <div class="form-section">
+            <PersonForm EditingPerson="editingPerson" OnFormSubmitted="HandleFormSubmitted" />
+        </div>
+
+        <div class="timeline-section">
+            <h2>Timeline</h2>
+            <div class="timeline-info mb-3">
+                <small class="text-muted">Showing @filteredPeople.Count() of @allPeople.Count() people</small>
+            </div>
+            <TimelineDisplay People="filteredPeople" OnEdit="HandleEdit" OnDelete="HandleDelete" />
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <small class="text-muted">
+            Data stored locally in browser. Total entries: @allPeople.Count()
+        </small>
+    </footer>
+</div>
+
+@code {
+    private List<Person> allPeople = new();
+    private IEnumerable<Person> filteredPeople = Enumerable.Empty<Person>();
+    private Person? editingPerson = null;
+    private string searchTerm = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TimelineService.InitializeAsync();
+        TimelineService.OnChange += StateHasChanged;
+        LoadPeople();
+    }
+
+    private void LoadPeople()
+    {
+        allPeople = TimelineService.GetPeople().ToList();
+        HandleSearch();
+    }
+
+    private void HandleSearch()
+    {
+        filteredPeople = TimelineService.SearchPeople(searchTerm);
+    }
+
+    private void HandleEdit(Person person)
+    {
+        editingPerson = person;
+    }
+
+    private async Task HandleDelete(Person person)
+    {
+        if (editingPerson?.Id == person.Id)
+        {
+            editingPerson = null;
+        }
+        await TimelineService.DeletePersonAsync(person.Id);
+        LoadPeople();
+    }
+
+    private void HandleFormSubmitted()
+    {
+        editingPerson = null;
+        LoadPeople();
+    }
+
+    public void Dispose()
+    {
+        TimelineService.OnChange -= StateHasChanged;
+    }
+}
